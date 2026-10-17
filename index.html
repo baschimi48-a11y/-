@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BuildCalc TH | คำนวณวัสดุก่อสร้าง</title>
+<style>
+:root{--ink:#182230;--muted:#667085;--line:#dfe4ec;--bg:#f4f6f9;--card:#fff;--red:#b42318;--navy:#172033;--green:#067647;--amber:#93370d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+header{background:var(--navy);color:white;padding:24px 16px}header .inner,main{max-width:1120px;margin:auto}h1{margin:0;font-size:clamp(24px,4vw,36px)}header p{margin:6px 0 0;color:#d0d5dd}
+main{padding:16px 12px 42px}.alert{padding:13px 15px;border-radius:12px;margin-bottom:14px;background:#fffaeb;border:1px solid #fedf89;color:#7a2e0e}.alert.red{background:#fef3f2;border-color:#fecdca;color:#912018}
+nav{display:flex;gap:8px;overflow:auto;padding:2px 0 14px}nav button{white-space:nowrap;background:#e4e7ec;color:#344054}nav button.active{background:var(--navy);color:white}
+.panel{display:none}.panel.active{display:block}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 2px 8px #10182808}
+h2{font-size:20px;margin:0 0 12px}h3{font-size:16px;margin:15px 0 8px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{display:flex;flex-direction:column;gap:4px;min-width:0}.full{grid-column:1/-1}label{font-size:13px;color:var(--muted)}input,select{width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font:inherit;background:#fff;color:var(--ink)}button{font:inherit;font-weight:650;border:0;border-radius:9px;padding:10px 13px;cursor:pointer}.primary{background:#b42318;color:white}.secondary{background:#eaecf0;color:#344054}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.out{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:12px;overflow-wrap:anywhere}.big{font-size:22px;font-weight:750}.muted{font-size:12px;color:var(--muted)}.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:20px;background:#eaf2ff;color:#1849a9;margin-bottom:6px}.tag.warn{background:#fff1f0;color:#b42318}.tag.ok{background:#ecfdf3;color:#067647}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}th,td{text-align:left;padding:8px 5px;border-bottom:1px solid var(--line)}th:last-child,td:last-child{text-align:right}.right{text-align:right}.total{font-size:20px;font-weight:800}.hint{font-size:13px;color:var(--muted);margin:8px 0 0}.formula{font-family:ui-monospace,SFMono-Regular,monospace;font-size:12px;white-space:normal;background:#f2f4f7;border-radius:6px;padding:7px;margin-top:8px}.error{color:#b42318}.foot{font-size:12px;color:var(--muted);margin-top:20px}
+@media(max-width:430px){.fields{grid-template-columns:1fr}.full{grid-column:auto}nav button{padding:9px 10px}}
+@media print{header,nav,.actions,button{display:none!important}.panel{display:block!important;page-break-inside:avoid}.card{box-shadow:none;break-inside:avoid}body{background:white}main{max-width:none}.alert{break-inside:avoid}}
+</style></head>
+<body>
+<header><div class="inner"><h1>BuildCalc TH</h1><p>เครื่องคำนวณวัสดุก่อสร้างหลายประเภท พร้อมสูตรและระดับความน่าเชื่อถือของตัวเลข</p></div></header>
+<main>
+<div class="alert red"><b>ขอบเขตสำคัญ:</b> โปรแกรมนี้เป็นเครื่องมือถอดปริมาณและประมาณราคา ไม่ใช่แบบออกแบบโครงสร้าง ตัวเลขคอนกรีต/เหล็กโครงสร้างต้องยึดแบบวิศวกรและรายการประกอบแบบ ห้ามใช้ค่าเริ่มต้นเพื่อกำหนดขนาดหรือปริมาณเหล็กที่ปลอดภัย</div>
+<div class="alert"><b>วิธีให้ผลแม่นขึ้น:</b> วัดจากแบบหรือหน้างานจริง, หักช่องเปิด, ใช้ขนาดและอัตราการใช้จากผู้ผลิต, กรอกเปอร์เซ็นต์เผื่อให้เหมาะกับรูปแบบการปู/ตัด และตรวจหน่วยก่อนคำนวณ</div>
+<nav>
+<button class="active" data-tab="concrete">คอนกรีต</button><button data-tab="steel">เหล็ก</button><button data-tab="masonry">อิฐ/บล็อก</button><button data-tab="plaster">ปูนฉาบ</button><button data-tab="tile">กระเบื้อง</button><button data-tab="paint">สี</button><button data-tab="roof">หลังคา</button><button data-tab="budget">งบประมาณ</button><button data-tab="guide">สูตรและข้อจำกัด</button>
+</nav>
+
+<section id="concrete" class="panel active">
+<div class="grid">
+<div class="card"><span class="tag">ถอดปริมาณเรขาคณิต</span><h2>คำนวณปริมาตรคอนกรีต</h2>
+<div class="fields">
+<div class="field"><label>รูปทรง</label><select id="cShape"><option value="slab">พื้น/แผ่นสี่เหลี่ยม</option><option value="beam">คานสี่เหลี่ยม</option><option value="column">เสาสี่เหลี่ยม</option><option value="footing">ฐานรากสี่เหลี่ยม</option></select></div>
+<div class="field"><label>จำนวนชิ้น</label><input id="cN" type="number" min="1" step="1" value="1"></div>
+<div class="field"><label>ความยาว (ม.)</label><input id="cL" type="number" min="0" step="any" value="5"></div>
+<div class="field"><label>ความกว้าง (ม.)</label><input id="cW" type="number" min="0" step="any" value="3"></div>
+<div class="field"><label>ความหนา/สูง (ม.)</label><input id="cH" type="number" min="0" step="any" value="0.10"></div>
+<div class="field"><label>เผื่อสูญเสีย (%)</label><input id="cWaste" type="number" min="0" max="100" value="5"></div>
+</div><div class="actions"><button class="primary" onclick="calcConcrete()">คำนวณปริมาตร</button></div><div id="cOut" class="out">กรอกขนาดแล้วกดคำนวณ</div>
+<div class="formula">V = จำนวน × ยาว × กว้าง × หนา/สูง; Vสั่งซื้อ = V × (1 + เผื่อ/100)</div>
+<p class="hint">ปริมาตรคอนกรีตผสมเสร็จคำนวณได้จากรูปทรง หากสั่งคอนกรีตผสมเสร็จให้ใช้ปริมาตรเปียกและเผื่อหน้างาน ไม่ใช้สูตรปริมาตรวัสดุแห้งด้านล่างโดยอัตโนมัติ</p></div>
+<div class="card"><span class="tag warn">ค่าประมาณเท่านั้น</span><h2>ประมาณวัสดุผสมหน้างาน</h2>
+<div class="fields">
+<div class="field"><label>ปริมาตรคอนกรีตที่ต้องการ (ลบ.ม.)</label><input id="mixV" type="number" min="0" step="any" value="1"></div>
+<div class="field"><label>ตัวคูณปริมาตรแห้ง</label><input id="dryFactor" type="number" min="1" step="any" value="1.54"></div>
+<div class="field"><label>อัตราส่วนปูน : ทราย : หิน</label><select id="mixRatio"><option value="1,2,4">1 : 2 : 4</option><option value="1,2,3">1 : 2 : 3</option><option value="1,1.5,3">1 : 1.5 : 3</option></select></div>
+<div class="field"><label>ความหนาแน่นปูน (กก./ลบ.ม.)</label><input id="cementDensity" type="number" min="1" value="1440"></div>
+<div class="field"><label>น้ำหนักปูนต่อถุง (กก.)</label><input id="cementBag" type="number" min="1" value="50"></div>
+</div><div class="actions"><button class="primary" onclick="calcMix()">ประมาณส่วนผสม</button></div><div id="mixOut" class="out">กรอกข้อมูลแล้วกดคำนวณ</div>
+<p class="hint">อัตราส่วนโดยปริมาตรไม่รับประกันกำลังอัดคอนกรีต งานโครงสร้างควรใช้สเปกคอนกรีต/แบบวิศวกรและคอนกรีตที่ควบคุมคุณภาพ</p></div>
+</div></section>
+
+<section id="steel" class="panel"><div class="grid">
+<div class="card"><span class="tag">คำนวณจากรายการตัดเหล็ก</span><h2>น้ำหนักเหล็กเส้น</h2>
+<div class="fields">
+<div class="field"><label>เส้นผ่านศูนย์กลาง (มม.)</label><select id="sD"><option>6</option><option>9</option><option>10</option><option>12</option><option selected>16</option><option>20</option><option>25</option><option>28</option><option>32</option></select></div>
+<div class="field"><label>จำนวนเส้น</label><input id="sN" type="number" min="0" step="1" value="20"></div>
+<div class="field"><label>ความยาวต่อเส้น (ม.)</label><input id="sL" type="number" min="0" step="any" value="10"></div>
+<div class="field"><label>เผื่อเศษ/ตัด (%)</label><input id="sWaste" type="number" min="0" max="100" value="5"></div>
+</div><div class="actions"><button class="primary" onclick="calcSteel()">คำนวณน้ำหนัก</button></div><div id="sOut" class="out">กรอกข้อมูลแล้วกดคำนวณ</div>
+<div class="formula">น้ำหนักโดยประมาณ (กก./ม.) = d² ÷ 162; น้ำหนักรวม = กก./ม. × ความยาว × จำนวน</div>
+<p class="hint">สูตร d²/162 เป็นค่าประมาณน้ำหนักตามเส้นผ่านศูนย์กลาง ไม่ได้คำนวณจำนวนเหล็กที่ต้องใช้เพื่อความแข็งแรง และไม่รวมระยะทาบ งอ ตะขอ หรือรายละเอียดเหล็กปลอก</p></div>
+<div class="card"><span class="tag warn">ต้องอ้างอิงแบบ</span><h2>รายการเหล็กโครงสร้าง</h2><p>ใช้ตัวคำนวณน้ำหนักนี้กับจำนวน/ขนาด/ความยาวที่ได้จากแบบโครงสร้างหรือ Bar Bending Schedule เท่านั้น</p><ul><li>ตรวจชั้นคุณภาพและมาตรฐานเหล็ก</li><li>ตรวจระยะทาบ ระยะฝัง และระยะงอจากแบบ</li><li>ตรวจเหล็กปลอก ระยะเรียง และรายละเอียดบริเวณหัวเสา/จุดต่อ</li><li>ให้วิศวกรผู้รับผิดชอบตรวจแบบก่อนสั่งซื้อ</li></ul></div>
+</div></section>
+
+<section id="masonry" class="panel"><div class="grid"><div class="card"><span class="tag">ประมาณจำนวนก้อน</span><h2>อิฐและบล็อกก่อผนัง</h2>
+<div class="fields"><div class="field"><label>ความยาวผนังรวม (ม.)</label><input id="mL" type="number" min="0" value="10" step="any"></div><div class="field"><label>ความสูงผนัง (ม.)</label><input id="mH" type="number" min="0" value="3" step="any"></div><div class="field"><label>พื้นที่ช่องเปิดรวม (ตร.ม.)</label><input id="mOpen" type="number" min="0" value="2" step="any"></div><div class="field"><label>ก้อนต่อ ตร.ม. (ตามสินค้าจริง)</label><input id="mRate" type="number" min="0.01" value="12.5" step="any"></div><div class="field"><label>เผื่อแตก/ตัด (%)</label><input id="mWaste" type="number" min="0" max="100" value="5"></div></div>
+<div class="actions"><button class="primary" onclick="calcMasonry()">คำนวณจำนวนก้อน</button></div><div id="mOut" class="out">กรอกข้อมูลแล้วกดคำนวณ</div><div class="formula">พื้นที่สุทธิ = ยาว × สูง − พื้นที่ช่องเปิด; จำนวนก้อน = พื้นที่สุทธิ × อัตราก้อน/ตร.ม. × (1 + เผื่อ/100)</div>
+<p class="hint">อัตราก้อน/ตร.ม. ต้องมาจากขนาดก้อนและรอยต่อจริงของผู้ผลิต อย่าถือค่าตัวอย่างเป็นมาตรฐานของอิฐทุกชนิด</p></div></div></section>
+
+<section id="plaster" class="panel"><div class="grid"><div class="card"><span class="tag">ขึ้นกับผลิตภัณฑ์</span><h2>ปูนฉาบ</h2>
+<div class="fields"><div class="field"><label>พื้นที่ฉาบรวม (ตร.ม.)</label><input id="pArea" type="number" min="0" value="30" step="any"></div><div class="field"><label>ความหนาฉาบ (มม.)</label><input id="pThick" type="number" min="0" value="15" step="any"></div><div class="field"><label>อัตราใช้ (กก./ตร.ม./10 มม.)</label><input id="pRate" type="number" min="0" value="16" step="any"></div><div class="field"><label>น้ำหนักต่อถุง (กก.)</label><input id="pBag" type="number" min="1" value="50"></div><div class="field"><label>เผื่อสูญเสีย (%)</label><input id="pWaste" type="number" min="0" max="100" value="10"></div></div>
+<div class="actions"><button class="primary" onclick="calcPlaster()">คำนวณปูนฉาบ</button></div><div id="pOut" class="out">กรอกข้อมูลแล้วกดคำนวณ</div><div class="formula">กก. = พื้นที่ × (ความหนา/10) × อัตราใช้ × (1 + เผื่อ/100); ถุง = ปัดขึ้น(กก./น้ำหนักต่อถุง)</div>
+<p class="hint">ใช้อัตราการใช้จากฉลาก/เอกสารผู้ผลิตของปูนฉาบรุ่นนั้น และคำนวณพื้นที่ฉาบจริงรวมทุกด้าน</p></div></div></section>
+
+<section id="tile" class="panel"><div class="grid"><div class="card"><span class="tag">รวมเผื่อตัด</span><h2>กระเบื้องพื้น/ผนัง</h2>
+<div class="fields"><div class="field"><label>ความยาวพื้นที่ (ม.)</label><input id="tL" type="number" min="0" value="4" step="any"></div><div class="field"><label>ความกว้างพื้นที่ (ม.)</label><input id="tW" type="number" min="0" value="3" step="any"></div><div class="field"><label>ยาวกระเบื้อง (ซม.)</label><input id="tTL" type="number" min="0.1" value="60" step="any"></div><div class="field"><label>กว้างกระเบื้อง (ซม.)</label><input id="tTW" type="number" min="0.1" value="60" step="any"></div><div class="field"><label>แผ่นต่อกล่อง</label><input id="tBox" type="number" min="1" value="4" step="1"></div><div class="field"><label>เผื่อตัด/แตก (%)</label><input id="tWaste" type="number" min="0" max="100" value="10"></div></div>
+<div class="actions"><button class="primary" onclick="calcTile()">คำนวณกระเบื้อง</button></div><div id="tOut" class="out">กรอกข้อมูลแล้วกดคำนวณ</div><div class="formula">พื้นที่ต่อแผ่น = (ยาวซม./100) × (กว้างซม./100); แผ่น = ปัดขึ้น(พื้นที่ ÷ พื้นที่ต่อแผ่น × (1 + เผื่อ/100)); กล่อง = ปัดขึ้น(แผ่น ÷ แผ่นต่อกล่อง)</div><p class="hint">พื้นที่รูปทรงซับซ้อน ลายเฉียง หรือมีการเลือกแผ่น/เฉดสี ควรเพิ่มอัตราเผื่อและตรวจผังปูก่อนสั่งซื้อ</p></div></div></section>
+
+<section id="paint" class="panel"><div class="grid"><div class="card"><span class="tag">ตามอัตราปกคลุมผู้ผลิต</span><h2>สีทาผนัง</h2>
+<div class="fields"><div class="field"><label>พื้นที่ทาสี (ตร.ม.)</label><input id="pa" type="number" min="0" value="50" step="any"></div><div class="field"><label>จำนวนเที่ยว</label><input id="pc" type="number" min="1" value="2" step="1"></div><div class="field"><label>อัตราปกคลุม (ตร.ม./ลิตร/เที่ยว)</label><input id="pr" type="number" min="0.1" value="10" step="any"></div><div class="field"><label>ขนาดถัง (ลิตร)</label><input id="pb" type="number" min="0.1" value="18" step="any"></div><div class="field"><label>เผื่อสูญเสีย (%)</label><input id="pw" type="number" min="0" max="100" value="10"></div></div>
+<div class="actions"><button class="primary" onclick="calcPaint()">คำนวณสี</button></div><div id="paOut" class="out">กรอกข้อมูลแล้วกดคำนวณ</div><div class="formula">ลิตร = พื้นที่ × จำนวนเที่ยว ÷ อัตราปกคลุม × (1 + เผื่อ/100); ถัง = ปัดขึ้น(ลิตร/ขนาดถัง)</div><p class="hint">พื้นที่ควรหักช่องเปิด และแยกสีรองพื้น/สีทับหน้าเป็นคนละรายการเมื่อจำเป็น</p></div></div></section>
+
+<section id="roof" class="panel"><div class="grid"><div class="card"><span class="tag">ประมาณพื้นที่มุง</span><h2>หลังคาทรงลาด</h2>
+<div class="fields"><div class="field"><label>ความยาวแนวสัน/ชายคา (ม.)</label><input id="rL" type="number" min="0" value="10" step="any"></div><div class="field"><label>ระยะแป/ความยาวลาดจากสันถึงชายคา (ม.)</label><input id="rS" type="number" min="0" value="4" step="any"></div><div class="field"><label>จำนวนด้านลาดเหมือนกัน</label><select id="rSides"><option value="1">1 ด้าน</option><option value="2" selected>2 ด้าน</option><option value="4">4 ด้าน (สมมติเท่ากัน)</option></select></div><div class="field"><label>เผื่อซ้อนทับ/ตัด (%)</label><input id="rWaste" type="number" min="0" max="100" value="10"></div><div class="field"><label>พื้นที่ครอบคลุมจริงต่อแผ่น (ตร.ม.)</label><input id="rCover" type="number" min="0.001" value="0.3" step="any"></div></div>
+<div class="actions"><button class="primary" onclick="calcRoof()">คำนวณพื้นที่หลังคา</button></div><div id="rOut" class="out">กรอกข้อมูลแล้วกดคำนวณ</div><div class="formula">พื้นที่ลาด = ความยาวแนวหลังคา × ความยาวลาด × จำนวนด้าน; พื้นที่สั่ง = พื้นที่ลาด × (1 + เผื่อ/100); จำนวนแผ่น = ปัดขึ้น(พื้นที่สั่ง/พื้นที่ครอบคลุมจริงต่อแผ่น)</div><p class="hint">ใช้ระยะลาดจริง ไม่ใช่ระยะแนวราบ และตรวจระยะซ้อนทับ/ความกว้างใช้งานจากคู่มือผู้ผลิต แผ่นครอบ สันตะเข้ รางน้ำ และแฟลชชิ่งต้องแยกถอด</p></div></div></section>
+
+<section id="budget" class="panel"><div class="grid"><div class="card"><span class="tag">คำนวณจากรายการที่กรอก</span><h2>ประมาณงบประมาณวัสดุ</h2>
+<div class="fields"><div class="field"><label>ชื่อวัสดุ</label><input id="bName" value="ปูนซีเมนต์"></div><div class="field"><label>หน่วย</label><input id="bUnit" value="ถุง"></div><div class="field"><label>จำนวน</label><input id="bQty" type="number" min="0" step="any" value="10"></div><div class="field"><label>ราคาต่อหน่วย (บาท)</label><input id="bPrice" type="number" min="0" step="any" value="150"></div><div class="field"><label>ค่าขนส่ง/ค่าใช้จ่ายเพิ่ม (บาท)</label><input id="bExtra" type="number" min="0" step="any" value="0"></div></div><div class="actions"><button class="primary" onclick="addBudget()">เพิ่มรายการ</button><button class="secondary" onclick="clearBudget()">ล้างทั้งหมด</button><button class="secondary" onclick="window.print()">พิมพ์ / บันทึก PDF</button></div><div id="bOut" class="out">ยังไม่มีรายการ</div><p class="hint">งบประมาณรวมเฉพาะรายการที่คุณเพิ่ม ไม่รวมค่าแรง ภาษี งานชั่วคราว และรายการที่ยังไม่ได้ถอด เว้นแต่เพิ่มเข้าไปเอง</p></div>
+<div class="card"><h2>แนวทางประมาณราคา</h2><ul><li>กรอกราคาจากใบเสนอราคาหรือร้านค้าที่จะซื้อจริง</li><li>แยกหน่วยให้ถูกต้อง เช่น ถุง, กก., เส้น, กล่อง, ตร.ม.</li><li>แยกค่าวัสดุ ค่าแรง ขนส่ง และเครื่องมือ/งานชั่วคราว</li><li>เก็บวันที่และแหล่งที่มาของราคาในชื่อรายการหรือหมายเหตุ</li></ul></div></div></section>
+
+<section id="guide" class="panel"><div class="grid">
+<div class="card"><h2>สูตรที่ใช้และระดับความเชื่อมั่น</h2><table><thead><tr><th>รายการ</th><th>สูตร/หลักการ</th><th>ระดับ</th></tr></thead><tbody>
+<tr><td>ปริมาตรคอนกรีต</td><td>จำนวน × ยาว × กว้าง × หนา/สูง</td><td>สูง หากมิติถูกต้อง</td></tr>
+<tr><td>ส่วนผสมคอนกรีต</td><td>ปริมาตรแห้ง × สัดส่วนแต่ละวัสดุ ÷ ผลรวมสัดส่วน</td><td>ค่าประมาณ; ไม่ยืนยันกำลังอัด</td></tr>
+<tr><td>น้ำหนักเหล็ก</td><td>น้ำหนัก ≈ d²/162 กก./ม. เมื่อ d เป็นมม.</td><td>ประมาณน้ำหนัก; จำนวนเหล็กต้องอ้างอิงแบบ</td></tr>
+<tr><td>อิฐ/บล็อก</td><td>พื้นที่ผนังสุทธิ × ก้อน/ตร.ม.</td><td>ขึ้นกับขนาดก้อน/รอยต่อ</td></tr>
+<tr><td>ปูนฉาบ</td><td>พื้นที่ × ความหนา/10 × อัตราใช้</td><td>อัตราใช้ต้องอ้างอิงผู้ผลิต</td></tr>
+<tr><td>กระเบื้อง</td><td>พื้นที่ ÷ พื้นที่ต่อแผ่น + เผื่อ แล้วปัดขึ้นตามกล่อง</td><td>ประมาณ; ผังปูอาจทำให้ใช้เพิ่ม</td></tr>
+<tr><td>สี</td><td>พื้นที่ × เที่ยว ÷ อัตราปกคลุม</td><td>อ้างอิงข้อมูลผู้ผลิต/สภาพพื้นผิว</td></tr>
+<tr><td>หลังคา</td><td>ความยาว × ระยะลาด × จำนวนด้าน</td><td>ประมาณ; ต้องถอดอุปกรณ์ขอบ/ครอบแยก</td></tr>
+<tr><td>งบประมาณ</td><td>ผลรวม(จำนวน × ราคาต่อหน่วย) + ค่าใช้จ่ายเพิ่ม</td><td>แม่นเมื่อราคาและปริมาณจริงครบ</td></tr>
+</tbody></table></div>
+<div class="card"><h2>ต้องอ้างอิงแบบวิศวกร/ผู้ผลิต</h2><ul><li>ขนาดหน้าตัดและกำลังรับน้ำหนักของคาน เสา พื้น ฐานราก</li><li>ขนาด จำนวน ระยะเรียง ระยะทาบ ระยะงอ และรายละเอียดเหล็ก</li><li>กำลังอัดคอนกรีต อัตราส่วนน้ำต่อซีเมนต์ และข้อกำหนดการบ่ม</li><li>รายละเอียดโครงหลังคา แรงลม จุดยึด และระยะวางแป</li><li>สเปกวัสดุ ขนาดใช้งานจริง และอัตราการใช้จากผู้ผลิต</li></ul><div class="alert red">อย่าใช้ค่าประมาณในโปรแกรมนี้ตัดสินความปลอดภัยของโครงสร้างหรือแทนการตรวจแบบโดยวิศวกร</div></div>
+</div></section>
+<div class="foot">ทำงานในเบราว์เซอร์ ไม่ส่งข้อมูลออกไปยังเซิร์ฟเวอร์โดยโค้ดนี้เอง ข้อมูลและราคาที่กรอกจะไม่บันทึกถาวรเมื่อปิด/รีเฟรชหน้า ควรตรวจสอบผลลัพธ์และหน่วยก่อนสั่งซื้อ</div>
+</main>
+<script>
+const $=id=>document.getElementById(id), n=id=>Number($(id).value);
+const f=x=>Number.isFinite(x)?new Intl.NumberFormat('th-TH',{maximumFractionDigits:2}).format(x):'—';
+const ceil=x=>Math.ceil(x);
+function out(id,html){$(id).innerHTML=html}
+function valid(ids,positive=[]){for(const id of ids){const v=$(id).value;if(v.trim()===''||!Number.isFinite(Number(v))||Number(v)<0)return false}for(const id of positive){if(Number($(id).value)<=0)return false}return true}
+function fail(id){out(id,'<span class="error">กรุณากรอกตัวเลขให้ถูกต้องและตรวจสอบค่าที่ต้องมากกว่า 0</span>')}
+document.querySelectorAll('nav button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));btn.classList.add('active');$(btn.dataset.tab).classList.add('active')}));
+function calcConcrete(){let ids=['cN','cL','cW','cH','cWaste'];if(!valid(ids,['cN'])||n('cWaste')>100)return fail('cOut');let v=n('cN')*n('cL')*n('cW')*n('cH'),buy=v*(1+n('cWaste')/100);out('cOut',`ปริมาตรสุทธิ <div class="big">${f(v)} ลบ.ม.</div>ปริมาตรเผื่อสั่งซื้อ <div class="big">${f(buy)} ลบ.ม.</div><span class="muted">ใช้จำนวน ${f(n('cN'))} ชิ้น • เผื่อ ${f(n('cWaste'))}%</span>`);$('mixV').value=buy}
+function calcMix(){let ids=['mixV','dryFactor','cementDensity','cementBag'];if(!valid(ids,['dryFactor','cementDensity','cementBag']))return fail('mixOut');let v=n('mixV'),dry=v*n('dryFactor'),r=$('mixRatio').value.split(',').map(Number),sum=r.reduce((a,b)=>a+b,0),cv=dry*r[0]/sum,sv=dry*r[1]/sum,gv=dry*r[2]/sum,bags=ceil(cv*n('cementDensity')/n('cementBag'));out('mixOut',`ปริมาตรแห้งสมมติ <b>${f(dry)} ลบ.ม.</b><table><tr><td>ปูนซีเมนต์</td><td>${bags} ถุง (${f(bags*n('cementBag'))} กก. สำหรับการซื้อเต็มถุง)</td></tr><tr><td>ทรายโดยปริมาตร</td><td>${f(sv)} ลบ.ม.</td></tr><tr><td>หินโดยปริมาตร</td><td>${f(gv)} ลบ.ม.</td></tr></table><p class="muted">คำนวณปริมาณปูนจากความหนาแน่นที่กรอก ส่วนทราย/หินเป็นปริมาตรแห้งตามสัดส่วนสมมติ ไม่ใช่ mix design รับรองกำลังอัด</p>`)}
+function calcSteel(){let ids=['sD','sN','sL','sWaste'];if(!valid(ids)||n('sWaste')>100)return fail('sOut');let d=n('sD'),kgm=d*d/162,len=n('sN')*n('sL'),kg=len*kgm,buy=kg*(1+n('sWaste')/100);out('sOut',`น้ำหนักทฤษฎีต่อเมตร <b>${f(kgm)} กก./ม.</b><br>ความยาวรวม <b>${f(len)} ม.</b><br>น้ำหนักไม่รวมเผื่อ <div class="big">${f(kg)} กก.</div>น้ำหนักรวมเผื่อ ${f(n('sWaste'))}% <div class="big">${f(buy)} กก.</div><span class="muted">ยังไม่รวมระยะทาบ งอ ตะขอ และเศษจากแผนตัด เว้นแต่ความยาวต่อเส้นที่กรอกได้รวมรายการเหล่านี้แล้ว</span>`)}
+function calcMasonry(){let ids=['mL','mH','mOpen','mRate','mWaste'];if(!valid(ids,['mRate'])||n('mWaste')>100)return fail('mOut');let gross=n('mL')*n('mH'),area=Math.max(0,gross-n('mOpen')),qty=ceil(area*n('mRate')*(1+n('mWaste')/100));out('mOut',`พื้นที่ก่อนหักช่องเปิด ${f(gross)} ตร.ม.<br>พื้นที่สุทธิ <div class="big">${f(area)} ตร.ม.</div>จำนวนก้อนโดยประมาณ <div class="big">${f(qty)} ก้อน</div><span class="muted">ใช้อัตรา ${f(n('mRate'))} ก้อน/ตร.ม. และเผื่อ ${f(n('mWaste'))}%</span>`)}
+function calcPlaster(){let ids=['pArea','pThick','pRate','pBag','pWaste'];if(!valid(ids,['pBag'])||n('pWaste')>100)return fail('pOut');let kg=n('pArea')*n('pThick')/10*n('pRate')*(1+n('pWaste')/100),bags=ceil(kg/n('pBag'));out('pOut',`น้ำหนักปูนฉาบโดยประมาณ <div class="big">${f(kg)} กก.</div>จำนวนถุงที่ต้องซื้อ <div class="big">${bags} ถุง</div><span class="muted">ถุงละ ${f(n('pBag'))} กก. • อัตราใช้ที่กรอก ${f(n('pRate'))} กก./ตร.ม./10 มม.</span>`)}
+function calcTile(){let ids=['tL','tW','tTL','tTW','tBox','tWaste'];if(!valid(ids,['tTL','tTW','tBox'])||n('tWaste')>100)return fail('tOut');let area=n('tL')*n('tW'),tile=(n('tTL')/100)*(n('tTW')/100),tiles=ceil(area/tile*(1+n('tWaste')/100)),boxes=ceil(tiles/n('tBox'));out('tOut',`พื้นที่ปู <b>${f(area)} ตร.ม.</b><br>จำนวนแผ่น (รวมเผื่อ) <div class="big">${f(tiles)} แผ่น</div>จำนวนกล่อง <div class="big">${f(boxes)} กล่อง</div><span class="muted">แผ่นละ ${f(tile)} ตร.ม. • ${f(n('tBox'))} แผ่น/กล่อง • เผื่อ ${f(n('tWaste'))}%</span>`)}
+function calcPaint(){let ids=['pa','pc','pr','pb','pw'];if(!valid(ids,['pc','pr','pb'])||n('pw')>100)return fail('paOut');let litres=n('pa')*n('pc')/n('pr')*(1+n('pw')/100),cans=ceil(litres/n('pb'));out('paOut',`ปริมาณสี <div class="big">${f(litres)} ลิตร</div>จำนวนถัง <div class="big">${f(cans)} ถัง</div><span class="muted">ถังละ ${f(n('pb'))} ลิตร • อัตราปกคลุม ${f(n('pr'))} ตร.ม./ลิตร/เที่ยว</span>`)}
+function calcRoof(){let ids=['rL','rS','rWaste','rCover'];if(!valid(ids,['rCover'])||n('rWaste')>100)return fail('rOut');let area=n('rL')*n('rS')*Number($('rSides').value),order=area*(1+n('rWaste')/100),sheets=ceil(order/n('rCover'));out('rOut',`พื้นที่ลาดรวม <div class="big">${f(area)} ตร.ม.</div>พื้นที่รวมเผื่อ <div class="big">${f(order)} ตร.ม.</div>จำนวนแผ่นโดยประมาณ <div class="big">${f(sheets)} แผ่น</div><span class="muted">ใช้พื้นที่ครอบคลุมจริง ${f(n('rCover'))} ตร.ม./แผ่น • ยังไม่รวมอุปกรณ์ครอบ/ขอบ/รางน้ำ</span>`)}
+let budgets=[];
+function addBudget(){let name=$('bName').value.trim(),unit=$('bUnit').value.trim(),qty=n('bQty'),price=n('bPrice'),extra=n('bExtra');if(!name||!unit||![qty,price,extra].every(x=>Number.isFinite(x)&&x>=0)){out('bOut','<span class="error">ตรวจชื่อวัสดุ หน่วย จำนวน ราคา และค่าใช้จ่ายเพิ่ม</span>');return}budgets.push({name,unit,qty,price,extra});renderBudget()}
+function removeBudget(i){budgets.splice(i,1);renderBudget()}
+function clearBudget(){budgets=[];renderBudget()}
+function renderBudget(){if(!budgets.length){out('bOut','ยังไม่มีรายการ');return}let total=0,rows=budgets.map((x,i)=>{let sub=x.qty*x.price+x.extra;total+=sub;return `<tr><td>${esc(x.name)}</td><td>${f(x.qty)} ${esc(x.unit)}</td><td>${f(x.price)}</td><td>${f(x.extra)}</td><td>${f(sub)}</td><td><button class="secondary" onclick="removeBudget(${i})">ลบ</button></td></tr>`}).join('');out('bOut',`<div style="overflow-x:auto"><table><thead><tr><th>วัสดุ</th><th>จำนวน</th><th>ราคาต่อหน่วย</th><th>เพิ่ม</th><th>รวม (บาท)</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><p>งบรวมวัสดุและค่าใช้จ่ายที่กรอก</p><div class="total">${f(total)} บาท</div>`)}
+function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+</script></body></html>
